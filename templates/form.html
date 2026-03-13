@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>{% if action == 'add' %}新規登録{% else %}編集{% endif %}</h2>
+
+<form method="post" action="{% if action == 'add' %}{{ url_for('add') }}{% else %}{{ url_for('edit', todo_id=todo.id) }}{% endif %}">
+    <div class="form-group">
+        <label for="title">タイトル *</label>
+        <input type="text" id="title" name="title" value="{{ todo.title if todo else '' }}" required placeholder="Todoのタイトル">
+    </div>
+    <div class="form-group">
+        <label for="content">内容</label>
+        <textarea id="content" name="content" placeholder="詳細な内容">{{ todo.content if todo else '' }}</textarea>
+    </div>
+    <div class="form-group">
+        <label for="due_date">期日</label>
+        <input type="date" id="due_date" name="due_date" value="{{ todo.due_date if todo and todo.due_date else '' }}">
+    </div>
+    <div class="actions">
+        <button type="submit" class="btn">{% if action == 'add' %}登録{% else %}更新{% endif %}</button>
+        <a href="{{ url_for('index') }}" class="btn" style="background:#6c757d;">キャンセル</a>
+    </div>
+</form>
+{% endblock %}
