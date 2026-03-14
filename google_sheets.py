@@ -47,58 +47,74 @@ def get_sheet():
     spreadsheet = gc.open_by_key(spreadsheet_id)
     worksheet = spreadsheet.sheet1
 
-    # ヘッダー行がなければ作成
+    # ヘッダー行がなければ作成（A=ID, B=タイトル, C=内容, D=期日, E=カテゴリ, F=完了, G=user_id）
     if not worksheet.cell(1, 1).value:
-        worksheet.update("A1:D1", [["ID", "タイトル", "内容", "期日"]])
-        worksheet.format("A1:D1", {"textFormat": {"bold": True}})
+        worksheet.update("A1:G1", [["ID", "タイトル", "内容", "期日", "カテゴリ", "完了", "user_id"]])
+        worksheet.format("A1:G1", {"textFormat": {"bold": True}})
 
     return worksheet
 
 
-def get_all_todos(worksheet):
-    """全Todoを取得（列位置で固定: A=ID, B=タイトル, C=内容, D=期日）"""
+def get_all_todos(worksheet, user_id=None):
+    """全Todoを取得。user_id指定時はそのユーザーのTodoのみ（user_id空は従来データとして全員に表示）"""
     values = worksheet.get_all_values()
     if not values:
         return []
 
-    # 1行目が「ID」ならヘッダー行としてスキップ、そうでなければデータとして扱う
     first_cell = (values[0][0] if values[0] else "").strip()
     data_rows = values[1:] if first_cell == "ID" else values
 
     todos = []
     for row_values in data_rows:
         todo_id = (row_values[0] if len(row_values) > 0 else "").strip()
-        if todo_id and todo_id.isdigit():
-            todos.append({
-                "id": todo_id,
-                "title": row_values[1] if len(row_values) > 1 else "",
-                "content": row_values[2] if len(row_values) > 2 else "",
-                "due_date": row_values[3] if len(row_values) > 3 else "",
-            })
+        if not todo_id or not todo_id.isdigit():
+            continue
+        row_user_id = row_values[6] if len(row_values) > 6 else ""
+        if user_id and row_user_id and row_user_id != str(user_id):
+            continue
+        todos.append({
+            "id": todo_id,
+            "title": row_values[1] if len(row_values) > 1 else "",
+            "content": row_values[2] if len(row_values) > 2 else "",
+            "due_date": row_values[3] if len(row_values) > 3 else "",
+            "category": row_values[4] if len(row_values) > 4 else "",
+            "completed": (row_values[5] if len(row_values) > 5 else "").strip().lower() in ("1", "○", "true", "完了"),
+        })
     return todos
 
 
-def add_todo(worksheet, title, content, due_date):
+def add_todo(worksheet, title, content, due_date, category="", user_id=""):
     """Todoを追加"""
-    records = worksheet.get_all_records()
+    values = worksheet.get_all_values()
     next_id = 1
-    if records:
-        ids = [int(r.get("ID", 0)) for r in records if r.get("ID")]
+    if len(values) > 1:
+        ids = []
+        first_cell = (values[0][0] if values[0] else "").strip()
+        data_rows = values[1:] if first_cell == "ID" else values
+        for row in data_rows:
+            vid = (row[0] if len(row) > 0 else "").strip()
+            if vid.isdigit():
+                ids.append(int(vid))
         if ids:
             next_id = max(ids) + 1
 
-    worksheet.append_row([next_id, title, content, due_date])
+    worksheet.append_row([next_id, title, content, due_date, category, "", str(user_id)])
     return next_id
 
 
-def update_todo(worksheet, row, title, content, due_date):
+def update_todo(worksheet, row, title, content, due_date, category=""):
     """Todoを更新"""
-    worksheet.update(f"B{row}:D{row}", [[title, content, due_date]])
+    worksheet.update(f"B{row}:E{row}", [[title, content, due_date, category]])
+
+
+def toggle_complete(worksheet, row, completed):
+    """Todoの完了状態を切り替え"""
+    worksheet.update(f"F{row}", [["1" if completed else ""]])
 
 
 def delete_todo(worksheet, row):
     """Todoを削除（行をクリア）"""
-    worksheet.update(f"A{row}:D{row}", [["", "", "", ""]])
+    worksheet.update(f"A{row}:G{row}", [["", "", "", "", "", "", ""]])
 
 
 def find_todo_row(worksheet, todo_id):

@@ -44,6 +44,10 @@ git push -u origin main
 | `SPREADSHEET_ID` | スプレッドシートのID（URLの `/d/` と `/edit` の間） |
 | `GOOGLE_CREDENTIALS_JSON` | `credentials.json` の**全文**をそのまま貼り付け |
 | `SECRET_KEY` | ランダムな文字列（例: `openssl rand -hex 32` で生成） |
+| `GOOGLE_CLIENT_ID` | （任意）Googleログイン用 OAuth クライアント ID |
+| `GOOGLE_CLIENT_SECRET` | （任意）Googleログイン用 OAuth クライアント シークレット |
+
+※ Googleログインの設定は `GOOGLE_OAUTH_SETUP.md` を参照
 
 ### GOOGLE_CREDENTIALS_JSON の取得方法
 

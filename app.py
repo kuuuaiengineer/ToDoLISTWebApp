@@ -3,19 +3,45 @@ Todoリスト Webアプリ - Flask + Googleスプレッドシート
 """
 import os
 
+from authlib.integrations.flask_client import OAuth
 from flask import Flask, render_template, request, redirect, url_for, flash
+from flask_login import LoginManager, login_user, logout_user, current_user
 
+from auth import User, init_db, login_required
 from google_sheets import (
     get_sheet,
     get_all_todos,
     add_todo,
     update_todo,
     delete_todo,
+    toggle_complete,
     find_todo_row,
 )
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-key-change-in-production")
+
+init_db()
+
+# Google OAuth
+oauth = OAuth(app)
+oauth.register(
+    name="google",
+    client_id=os.environ.get("GOOGLE_CLIENT_ID", ""),
+    client_secret=os.environ.get("GOOGLE_CLIENT_SECRET", ""),
+    server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
+    client_kwargs={"scope": "openid email profile"},
+)
+
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = "login"
+login_manager.login_message = "ログインしてください。"
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.get(int(user_id))
 
 
 def get_worksheet():
@@ -27,41 +53,160 @@ def get_worksheet():
         return None
 
 
+# カテゴリの選択肢
+CATEGORIES = ["", "仕事", "プライベート", "買い物", "その他"]
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    """ログイン"""
+    if current_user.is_authenticated:
+        return redirect(url_for("index"))
+    if request.method == "GET":
+        return render_template("login.html", google_enabled=bool(os.environ.get("GOOGLE_CLIENT_ID")))
+
+    username = request.form.get("username", "").strip()
+    password = request.form.get("password", "")
+
+    if not username or not password:
+        flash("ユーザー名とパスワードを入力してください。", "error")
+        return render_template("login.html", google_enabled=bool(os.environ.get("GOOGLE_CLIENT_ID")))
+
+    user = User.verify(username, password)
+    if user:
+        login_user(user)
+        next_url = request.args.get("next") or url_for("index")
+        return redirect(next_url)
+
+    flash("ユーザー名またはパスワードが正しくありません。", "error")
+    return render_template("login.html", google_enabled=bool(os.environ.get("GOOGLE_CLIENT_ID")))
+
+
+@app.route("/login/google")
+def login_google():
+    """Googleログイン開始"""
+    if not os.environ.get("GOOGLE_CLIENT_ID"):
+        flash("Googleログインは設定されていません。", "error")
+        return redirect(url_for("login"))
+    redirect_uri = url_for("auth_google_callback", _external=True)
+    return oauth.google.authorize_redirect(redirect_uri)
+
+
+@app.route("/auth/google/callback")
+def auth_google_callback():
+    """Googleログインコールバック"""
+    try:
+        token = oauth.google.authorize_access_token()
+    except Exception as e:
+        flash(f"Googleログインに失敗しました: {e}", "error")
+        return redirect(url_for("login"))
+
+    user_info = token.get("userinfo")
+    if not user_info:
+        flash("Googleからユーザー情報を取得できませんでした。", "error")
+        return redirect(url_for("login"))
+
+    user = User.create_from_google(
+        google_id=user_info["sub"],
+        email=user_info.get("email", ""),
+        name=user_info.get("name"),
+    )
+    login_user(user)
+    flash("Googleでログインしました。", "success")
+    next_url = request.args.get("next") or url_for("index")
+    return redirect(next_url)
+
+
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    """新規登録"""
+    if current_user.is_authenticated:
+        return redirect(url_for("index"))
+    if request.method == "GET":
+        return render_template("register.html")
+
+    username = request.form.get("username", "").strip()
+    password = request.form.get("password", "")
+    password_confirm = request.form.get("password_confirm", "")
+
+    if not username or not password:
+        flash("ユーザー名とパスワードを入力してください。", "error")
+        return render_template("register.html")
+
+    if password != password_confirm:
+        flash("パスワードが一致しません。", "error")
+        return render_template("register.html")
+
+    if len(password) < 4:
+        flash("パスワードは4文字以上にしてください。", "error")
+        return render_template("register.html")
+
+    user = User.create(username, password)
+    if user:
+        login_user(user)
+        flash("登録が完了しました。", "success")
+        return redirect(url_for("index"))
+
+    flash("このユーザー名は既に使用されています。", "error")
+    return render_template("register.html")
+
+
+@app.route("/logout")
+def logout():
+    """ログアウト"""
+    logout_user()
+    flash("ログアウトしました。", "success")
+    return redirect(url_for("login"))
+
+
 @app.route("/")
+@login_required
 def index():
     """一覧表示"""
     worksheet = get_worksheet()
     if worksheet is None:
-        return render_template("index.html", todos=[])
+        return render_template("index.html", todos=[], categories=CATEGORIES)
 
-    todos = get_all_todos(worksheet)
-    return render_template("index.html", todos=todos)
+    category_filter = request.args.get("category", "")
+    todos = get_all_todos(worksheet, user_id=current_user.id)
+    if category_filter:
+        todos = [t for t in todos if t["category"] == category_filter]
+
+    return render_template("index.html", todos=todos, categories=CATEGORIES, category_filter=category_filter)
 
 
 @app.route("/add", methods=["GET", "POST"])
+@login_required
 def add():
     """新規登録"""
     if request.method == "GET":
-        return render_template("form.html", todo=None, action="add")
+        return render_template("form.html", todo=None, action="add", categories=CATEGORIES)
 
     title = request.form.get("title", "").strip()
     content = request.form.get("content", "").strip()
     due_date = request.form.get("due_date", "").strip()
+    category = request.form.get("category", "").strip()
 
     if not title:
         flash("タイトルは必須です。", "error")
-        return render_template("form.html", todo={"title": title, "content": content, "due_date": due_date}, action="add")
+        return render_template(
+            "form.html",
+            todo={"title": title, "content": content, "due_date": due_date, "category": category},
+            action="add",
+            categories=CATEGORIES,
+        )
 
     worksheet = get_worksheet()
     if worksheet is None:
         return redirect(url_for("index"))
 
-    add_todo(worksheet, title, content, due_date)
+    add_todo(worksheet, title, content, due_date, category=category, user_id=current_user.id)
     flash("Todoを追加しました。", "success")
     return redirect(url_for("index"))
 
 
 @app.route("/edit/<todo_id>", methods=["GET", "POST"])
+@login_required
 def edit(todo_id):
     """編集"""
     worksheet = get_worksheet()
@@ -74,31 +219,58 @@ def edit(todo_id):
         return redirect(url_for("index"))
 
     if request.method == "GET":
-        todos = get_all_todos(worksheet)
+        todos = get_all_todos(worksheet, user_id=current_user.id)
         todo = next((t for t in todos if t["id"] == todo_id), None)
         if todo is None:
             flash("該当するTodoが見つかりません。", "error")
             return redirect(url_for("index"))
-        return render_template("form.html", todo=todo, action="edit")
+        return render_template("form.html", todo=todo, action="edit", categories=CATEGORIES)
 
     title = request.form.get("title", "").strip()
     content = request.form.get("content", "").strip()
     due_date = request.form.get("due_date", "").strip()
+    category = request.form.get("category", "").strip()
 
     if not title:
         flash("タイトルは必須です。", "error")
         return render_template(
             "form.html",
-            todo={"id": todo_id, "title": title, "content": content, "due_date": due_date},
+            todo={"id": todo_id, "title": title, "content": content, "due_date": due_date, "category": category},
             action="edit",
+            categories=CATEGORIES,
         )
 
-    update_todo(worksheet, row, title, content, due_date)
+    update_todo(worksheet, row, title, content, due_date, category=category)
     flash("Todoを更新しました。", "success")
     return redirect(url_for("index"))
 
 
+@app.route("/toggle/<todo_id>", methods=["POST"])
+@login_required
+def toggle(todo_id):
+    """完了状態の切り替え"""
+    worksheet = get_worksheet()
+    if worksheet is None:
+        return redirect(url_for("index"))
+
+    row = find_todo_row(worksheet, todo_id)
+    if row is None:
+        flash("該当するTodoが見つかりません。", "error")
+        return redirect(url_for("index"))
+
+    todos = get_all_todos(worksheet, user_id=current_user.id)
+    todo = next((t for t in todos if t["id"] == todo_id), None)
+    if todo is None:
+        flash("該当するTodoが見つかりません。", "error")
+        return redirect(url_for("index"))
+
+    toggle_complete(worksheet, row, not todo["completed"])
+    flash("完了状態を更新しました。", "success")
+    return redirect(url_for("index"))
+
+
 @app.route("/delete/<todo_id>", methods=["POST"])
+@login_required
 def delete(todo_id):
     """削除"""
     worksheet = get_worksheet()
@@ -110,10 +282,17 @@ def delete(todo_id):
         flash("該当するTodoが見つかりません。", "error")
         return redirect(url_for("index"))
 
+    todos = get_all_todos(worksheet, user_id=current_user.id)
+    todo = next((t for t in todos if t["id"] == todo_id), None)
+    if todo is None:
+        flash("該当するTodoが見つかりません。", "error")
+        return redirect(url_for("index"))
+
     delete_todo(worksheet, row)
     flash("Todoを削除しました。", "success")
     return redirect(url_for("index"))
 
 
 if __name__ == "__main__":
+    init_db()
     app.run(debug=True, port=5000)

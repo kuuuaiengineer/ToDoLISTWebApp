@@ -13,6 +13,14 @@
         <textarea id="content" name="content" placeholder="詳細な内容">{{ todo.content if todo else '' }}</textarea>
     </div>
     <div class="form-group">
+        <label for="category">カテゴリ</label>
+        <select id="category" name="category">
+            {% for cat in categories %}
+            <option value="{{ cat }}" {% if todo and todo.category == cat %}selected{% endif %}>{{ cat if cat else '-- 選択 --' }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="form-group">
         <label for="due_date">期日</label>
         <input type="date" id="due_date" name="due_date" value="{{ todo.due_date if todo and todo.due_date else '' }}">
     </div>

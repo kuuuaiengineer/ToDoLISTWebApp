@@ -46,11 +46,21 @@
             font-size: 14px;
         }
         .form-group textarea { min-height: 100px; resize: vertical; }
+        .form-group select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
         .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        .user-info { color: #666; margin-bottom: 8px; }
+        .todo-completed { text-decoration: line-through; color: #999; }
+        .filter-bar { margin-bottom: 16px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
     </style>
 </head>
 <body>
     <h1>Todoリスト</h1>
+    {% if current_user.is_authenticated %}
+    <p class="user-info">
+        {{ current_user.username }} でログイン中
+        <a href="{{ url_for('logout') }}" class="btn btn-small" style="margin-left:8px;">ログアウト</a>
+    </p>
+    {% endif %}
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             {% for category, message in messages %}
