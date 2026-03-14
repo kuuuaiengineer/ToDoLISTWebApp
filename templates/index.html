@@ -17,7 +17,9 @@
 </div>
 
 {% if todos %}
-<table>
+<!-- PC: テーブル表示 -->
+<div class="todo-table-wrap">
+<table class="todo-table">
     <thead>
         <tr>
             <th>完了</th>
@@ -54,6 +56,34 @@
         {% endfor %}
     </tbody>
 </table>
+</div>
+
+<!-- スマホ: カード表示 -->
+<div class="todo-cards">
+    {% for todo in todos %}
+    <div class="todo-card {% if todo.completed %}todo-completed{% endif %}">
+        <div class="todo-card-header">
+            <form action="{{ url_for('toggle', todo_id=todo.id) }}" method="post" class="todo-card-toggle">
+                <button type="submit" class="btn btn-small">{% if todo.completed %}✓{% else %}○{% endif %}</button>
+            </form>
+            <div class="todo-card-title">{{ todo.title }}</div>
+        </div>
+        {% if todo.content %}
+        <div class="todo-card-content">{{ todo.content }}</div>
+        {% endif %}
+        <div class="todo-card-meta">
+            {% if todo.category %}<span class="todo-card-category">{{ todo.category }}</span>{% endif %}
+            {% if todo.due_date %}<span class="todo-card-date">{{ todo.due_date }}</span>{% endif %}
+        </div>
+        <div class="todo-card-actions">
+            <a href="{{ url_for('edit', todo_id=todo.id) }}" class="btn btn-small">編集</a>
+            <form action="{{ url_for('delete', todo_id=todo.id) }}" method="post" style="display:inline;" onsubmit="return confirm('削除しますか？');">
+                <button type="submit" class="btn btn-small btn-danger">削除</button>
+            </form>
+        </div>
+    </div>
+    {% endfor %}
+</div>
 {% else %}
 <p>Todoがありません。上の「新規追加」から登録してください。</p>
 {% endif %}
