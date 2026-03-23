@@ -7,7 +7,7 @@ from authlib.integrations.flask_client import OAuth
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_login import LoginManager, login_user, logout_user, current_user
 
-from auth import User, init_db, login_required, get_user_font, set_user_font
+from auth import User, init_db, login_required, get_user_font, set_user_font, get_user_theme, set_user_theme
 from categories import (
     init_categories_db,
     get_categories,
@@ -53,11 +53,11 @@ def load_user(user_id):
 
 
 @app.context_processor
-def inject_font():
-    """全テンプレートにフォント設定を渡す"""
+def inject_user_prefs():
+    """全テンプレートにフォント・テーマ設定を渡す"""
     if current_user.is_authenticated:
-        return {"font_pref": get_user_font(current_user.id)}
-    return {"font_pref": "gothic"}
+        return {"font_pref": get_user_font(current_user.id), "theme_pref": get_user_theme(current_user.id)}
+    return {"font_pref": "gothic", "theme_pref": "paper"}
 
 
 def get_worksheet():
@@ -174,6 +174,11 @@ def settings():
             set_user_font(current_user.id, font)
             flash("フォントを変更しました。", "success")
             return redirect(url_for("settings"))
+        if request.form.get("theme"):
+            theme = request.form.get("theme", "paper")
+            set_user_theme(current_user.id, theme)
+            flash("テーマを変更しました。", "success")
+            return redirect(url_for("settings"))
         # カテゴリ追加
         if "category_name" in request.form:
             ok, err = add_category(current_user.id, request.form.get("category_name", ""))
@@ -190,10 +195,12 @@ def settings():
 
     categories_list = get_categories(current_user.id)
     current_font = get_user_font(current_user.id)
+    current_theme = get_user_theme(current_user.id)
     return render_template(
         "settings.html",
         categories=categories_list,
         font=current_font,
+        theme=current_theme,
     )
 
 

@@ -6,7 +6,7 @@
     <title>{% block title %}Todoリスト{% endblock %}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&family=Noto+Sans+JP:wght@400;500;700&family=Shippori+Mincho:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&family=Noto+Sans+JP:wght@400;500;700&family=Shippori+Mincho:wght@400;600;700&family=Yusei+Magic&display=swap" rel="stylesheet">
     <style>
         :root {
             --paper-bg: #f5f0e6;
@@ -15,8 +15,76 @@
             --ink: #2c2419;
             --ink-light: #5a5248;
             --accent: #8b4513;
+            --accent-hover: #6b3410;
             --accent-red: #c0392b;
             --line: #d4cfc4;
+            --texture: %23e8e4dc;
+        }
+        body.theme-blue {
+            --paper-bg: #e8f4fc;
+            --paper-card: #f8fcff;
+            --paper-shadow: rgba(33, 150, 243, 0.12);
+            --ink: #0d47a1;
+            --ink-light: #1976d2;
+            --accent: #1565c0;
+            --accent-hover: #0d47a1;
+            --line: #bbdefb;
+            --texture: %23bbdefb;
+        }
+        body.theme-green {
+            --paper-bg: #e8f5e9;
+            --paper-card: #f1f8e9;
+            --paper-shadow: rgba(46, 125, 50, 0.12);
+            --ink: #1b5e20;
+            --ink-light: #2e7d32;
+            --accent: #2e7d32;
+            --accent-hover: #1b5e20;
+            --line: #c8e6c9;
+            --texture: %23c8e6c9;
+        }
+        body.theme-lavender {
+            --paper-bg: #f3e5f5;
+            --paper-card: #fce4ec;
+            --paper-shadow: rgba(156, 39, 176, 0.12);
+            --ink: #4a148c;
+            --ink-light: #6a1b9a;
+            --accent: #7b1fa2;
+            --accent-hover: #4a148c;
+            --line: #e1bee7;
+            --texture: %23e1bee7;
+        }
+        body.theme-mono {
+            --paper-bg: #fafafa;
+            --paper-card: #ffffff;
+            --paper-shadow: rgba(0, 0, 0, 0.08);
+            --ink: #212121;
+            --ink-light: #616161;
+            --accent: #424242;
+            --accent-hover: #212121;
+            --line: #e0e0e0;
+            --texture: %23eeeeee;
+        }
+        body.theme-pink {
+            --paper-bg: #fce4ec;
+            --paper-card: #fef5f8;
+            --paper-shadow: rgba(233, 30, 99, 0.12);
+            --ink: #880e4f;
+            --ink-light: #ad1457;
+            --accent: #c2185b;
+            --accent-hover: #880e4f;
+            --line: #f8bbd9;
+            --texture: %23f8bbd9;
+        }
+        body.theme-orange {
+            --paper-bg: #fff3e0;
+            --paper-card: #fff8f0;
+            --paper-shadow: rgba(230, 126, 34, 0.12);
+            --ink: #bf360c;
+            --ink-light: #e65100;
+            --accent: #e65100;
+            --accent-hover: #bf360c;
+            --line: #ffcc80;
+            --texture: %23ffcc80;
         }
         * { box-sizing: border-box; }
         html { -webkit-text-size-adjust: 100%; }
@@ -32,9 +100,24 @@
             color: var(--ink);
             min-height: 100vh;
         }
-        body.font-handwritten { font-family: "Caveat", "Hiragino Maru Gothic ProN", cursive; }
+        body.font-handwritten { font-family: "Yusei Magic", "Caveat", "Hiragino Maru Gothic ProN", cursive; }
         body.font-mincho { font-family: "Shippori Mincho", "Yu Mincho", "Hiragino Mincho ProN", serif; }
         body.font-gothic { font-family: "Noto Sans JP", "Yu Gothic UI", "Segoe UI", sans-serif; }
+        /* ボタン・入力欄・セレクト等はデフォルトでフォントを継承しないため、明示的に継承させる */
+        body.font-handwritten .btn, body.font-handwritten button, body.font-handwritten input,
+        body.font-handwritten select, body.font-handwritten textarea, body.font-handwritten label,
+        body.font-handwritten th, body.font-handwritten td, body.font-handwritten option,
+        body.font-handwritten a,
+        body.font-mincho .btn, body.font-mincho button, body.font-mincho input,
+        body.font-mincho select, body.font-mincho textarea, body.font-mincho label,
+        body.font-mincho th, body.font-mincho td, body.font-mincho option,
+        body.font-mincho a,
+        body.font-gothic .btn, body.font-gothic button, body.font-gothic input,
+        body.font-gothic select, body.font-gothic textarea, body.font-gothic label,
+        body.font-gothic th, body.font-gothic td, body.font-gothic option,
+        body.font-gothic a {
+            font-family: inherit;
+        }
 
         h1 { font-size: 1.6rem; color: var(--ink); margin-bottom: 8px; }
         h2 { font-size: 1.3rem; color: var(--ink); margin: 20px 0 12px; border-bottom: 1px solid var(--line); padding-bottom: 6px; }
@@ -51,7 +134,7 @@
             cursor: pointer;
             font-size: 14px;
         }
-        .btn:hover { opacity: 0.9; background: #6b3410; }
+        .btn:hover { opacity: 0.9; background: var(--accent-hover); }
         .btn-danger { background: var(--accent-red); }
         .btn-danger:hover { background: #a93226; }
         .btn-small { padding: 4px 10px; font-size: 12px; }
@@ -72,7 +155,7 @@
         table, .todo-table { width: 100%; border-collapse: collapse; background: var(--paper-card); border-radius: 2px; overflow: hidden; box-shadow: 0 2px 8px var(--paper-shadow); border: 1px solid var(--line); }
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--line); }
         th { background: var(--accent); color: white; font-weight: 600; }
-        tr:hover { background: rgba(139, 69, 19, 0.04); }
+        tr:hover { background: rgba(0, 0, 0, 0.03); }
         th, td { overflow-wrap: break-word; }
 
         .form-group { margin-bottom: 16px; }
@@ -115,7 +198,19 @@
         .settings-section { margin-bottom: 24px; }
         .font-options { display: flex; gap: 12px; flex-wrap: wrap; }
         .font-option { cursor: pointer; padding: 8px 16px; border: 2px solid var(--line); border-radius: 4px; }
-        .font-option:hover, .font-option.selected { border-color: var(--accent); background: rgba(139, 69, 19, 0.05); }
+        .font-option:hover, .font-option.selected { border-color: var(--accent); background: rgba(0, 0, 0, 0.03); }
+        .theme-options { display: flex; gap: 12px; flex-wrap: wrap; }
+        .theme-option { cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px; border: 2px solid var(--line); border-radius: 8px; }
+        .theme-option:hover, .theme-option.selected { border-color: var(--accent); }
+        .theme-swatch { width: 32px; height: 32px; border-radius: 50%; border: 2px solid rgba(0,0,0,0.1); }
+        .theme-paper { background: linear-gradient(135deg, #f5f0e6 50%, #e8e0d0 100%); }
+        .theme-blue { background: linear-gradient(135deg, #1565c0 50%, #0d47a1 100%); }
+        .theme-green { background: linear-gradient(135deg, #2e7d32 50%, #1b5e20 100%); }
+        .theme-lavender { background: linear-gradient(135deg, #7b1fa2 50%, #4a148c 100%); }
+        .theme-mono { background: linear-gradient(135deg, #616161 50%, #424242 100%); }
+        .theme-pink { background: linear-gradient(135deg, #ec407a 50%, #c2185b 100%); }
+        .theme-orange { background: linear-gradient(135deg, #ff9800 50%, #e65100 100%); }
+        .theme-label { font-size: 0.8rem; color: var(--ink-light); }
         .font-preview { font-size: 1.1rem; }
         .font-handwritten { font-family: "Caveat", cursive; }
         .font-mincho { font-family: "Shippori Mincho", serif; }
@@ -140,7 +235,7 @@
         }
     </style>
 </head>
-<body class="font-{{ font_pref }}">
+<body class="font-{{ font_pref }} theme-{{ theme_pref }}">
     <h1>Todoリスト</h1>
     {% if current_user.is_authenticated %}
     <p class="user-info">

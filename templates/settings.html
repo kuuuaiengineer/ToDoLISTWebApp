@@ -24,6 +24,49 @@
 </div>
 
 <div class="settings-section paper-card">
+    <h3>テーマカラー</h3>
+    <form method="post" action="{{ url_for('settings') }}" class="theme-select-form">
+        <div class="theme-options">
+            <label class="theme-option {% if theme == 'paper' %}selected{% endif %}">
+                <input type="radio" name="theme" value="paper" {% if theme == 'paper' %}checked{% endif %} onchange="this.form.submit()">
+                <span class="theme-swatch theme-paper" title="紙（茶系）"></span>
+                <span class="theme-label">紙（茶系）</span>
+            </label>
+            <label class="theme-option {% if theme == 'blue' %}selected{% endif %}">
+                <input type="radio" name="theme" value="blue" {% if theme == 'blue' %}checked{% endif %} onchange="this.form.submit()">
+                <span class="theme-swatch theme-blue" title="ブルー"></span>
+                <span class="theme-label">ブルー</span>
+            </label>
+            <label class="theme-option {% if theme == 'green' %}selected{% endif %}">
+                <input type="radio" name="theme" value="green" {% if theme == 'green' %}checked{% endif %} onchange="this.form.submit()">
+                <span class="theme-swatch theme-green" title="グリーン"></span>
+                <span class="theme-label">グリーン</span>
+            </label>
+            <label class="theme-option {% if theme == 'lavender' %}selected{% endif %}">
+                <input type="radio" name="theme" value="lavender" {% if theme == 'lavender' %}checked{% endif %} onchange="this.form.submit()">
+                <span class="theme-swatch theme-lavender" title="ラベンダー"></span>
+                <span class="theme-label">ラベンダー</span>
+            </label>
+            <label class="theme-option {% if theme == 'mono' %}selected{% endif %}">
+                <input type="radio" name="theme" value="mono" {% if theme == 'mono' %}checked{% endif %} onchange="this.form.submit()">
+                <span class="theme-swatch theme-mono" title="モノトーン"></span>
+                <span class="theme-label">モノトーン</span>
+            </label>
+            <label class="theme-option {% if theme == 'pink' %}selected{% endif %}">
+                <input type="radio" name="theme" value="pink" {% if theme == 'pink' %}checked{% endif %} onchange="this.form.submit()">
+                <span class="theme-swatch theme-pink" title="ピンク"></span>
+                <span class="theme-label">ピンク</span>
+            </label>
+            <label class="theme-option {% if theme == 'orange' %}selected{% endif %}">
+                <input type="radio" name="theme" value="orange" {% if theme == 'orange' %}checked{% endif %} onchange="this.form.submit()">
+                <span class="theme-swatch theme-orange" title="オレンジ"></span>
+                <span class="theme-label">オレンジ</span>
+            </label>
+        </div>
+    </form>
+</div>
+
+<div class="settings-section paper-card">
     <h3>カテゴリ管理</h3>
     <form method="post" action="{{ url_for('settings') }}" class="category-add-form">
         <div class="form-group">

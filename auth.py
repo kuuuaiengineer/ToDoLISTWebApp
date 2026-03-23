@@ -33,7 +33,7 @@ def init_db():
     """)
     conn.commit()
     # 既存テーブルにカラム追加（マイグレーション）
-    for col in ["google_id", "email", "font_preference"]:
+    for col in ["google_id", "email", "font_preference", "theme_preference"]:
         try:
             conn.execute(f"ALTER TABLE users ADD COLUMN {col} TEXT")
             conn.commit()
@@ -59,6 +59,28 @@ def set_user_font(user_id, font):
         font = "gothic"
     conn = get_db()
     conn.execute("UPDATE users SET font_preference = ? WHERE id = ?", (font, user_id))
+    conn.commit()
+    conn.close()
+
+
+def get_user_theme(user_id):
+    """ユーザーのテーマ設定を取得"""
+    conn = get_db()
+    row = conn.execute(
+        "SELECT theme_preference FROM users WHERE id = ?",
+        (user_id,),
+    ).fetchone()
+    conn.close()
+    return (row["theme_preference"] or "paper") if row else "paper"
+
+
+def set_user_theme(user_id, theme):
+    """ユーザーのテーマ設定を保存"""
+    valid = ("paper", "blue", "green", "lavender", "mono", "pink", "orange")
+    if theme not in valid:
+        theme = "paper"
+    conn = get_db()
+    conn.execute("UPDATE users SET theme_preference = ? WHERE id = ?", (theme, user_id))
     conn.commit()
     conn.close()
 
