@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&family=Noto+Sans+JP:wght@400;500;700&family=Shippori+Mincho:wght@400;600;700&family=Yusei+Magic&display=swap" rel="stylesheet">
     <style>
+        /* 背景・カードは常に紙（茶系）。枠線・表ヘッダー・ボタンのみテーマで変更 */
         :root {
             --paper-bg: #f5f0e6;
             --paper-card: #fefdf9;
@@ -18,74 +19,14 @@
             --accent-hover: #6b3410;
             --accent-red: #c0392b;
             --line: #d4cfc4;
-            --texture: %23e8e4dc;
         }
-        body.theme-blue {
-            --paper-bg: #e8f4fc;
-            --paper-card: #f8fcff;
-            --paper-shadow: rgba(33, 150, 243, 0.12);
-            --ink: #0d47a1;
-            --ink-light: #1976d2;
-            --accent: #1565c0;
-            --accent-hover: #0d47a1;
-            --line: #bbdefb;
-            --texture: %23bbdefb;
-        }
-        body.theme-green {
-            --paper-bg: #e8f5e9;
-            --paper-card: #f1f8e9;
-            --paper-shadow: rgba(46, 125, 50, 0.12);
-            --ink: #1b5e20;
-            --ink-light: #2e7d32;
-            --accent: #2e7d32;
-            --accent-hover: #1b5e20;
-            --line: #c8e6c9;
-            --texture: %23c8e6c9;
-        }
-        body.theme-lavender {
-            --paper-bg: #f3e5f5;
-            --paper-card: #fce4ec;
-            --paper-shadow: rgba(156, 39, 176, 0.12);
-            --ink: #4a148c;
-            --ink-light: #6a1b9a;
-            --accent: #7b1fa2;
-            --accent-hover: #4a148c;
-            --line: #e1bee7;
-            --texture: %23e1bee7;
-        }
-        body.theme-mono {
-            --paper-bg: #fafafa;
-            --paper-card: #ffffff;
-            --paper-shadow: rgba(0, 0, 0, 0.08);
-            --ink: #212121;
-            --ink-light: #616161;
-            --accent: #424242;
-            --accent-hover: #212121;
-            --line: #e0e0e0;
-            --texture: %23eeeeee;
-        }
-        body.theme-pink {
-            --paper-bg: #fce4ec;
-            --paper-card: #fef5f8;
-            --paper-shadow: rgba(233, 30, 99, 0.12);
-            --ink: #880e4f;
-            --ink-light: #ad1457;
-            --accent: #c2185b;
-            --accent-hover: #880e4f;
-            --line: #f8bbd9;
-            --texture: %23f8bbd9;
-        }
-        body.theme-orange {
-            --paper-bg: #fff3e0;
-            --paper-card: #fff8f0;
-            --paper-shadow: rgba(230, 126, 34, 0.12);
-            --ink: #bf360c;
-            --ink-light: #e65100;
-            --accent: #e65100;
-            --accent-hover: #bf360c;
-            --line: #ffcc80;
-            --texture: %23ffcc80;
-        }
+        body.theme-paper { --accent: #8b4513; --accent-hover: #6b3410; --line: #d4cfc4; }
+        body.theme-blue { --accent: #1565c0; --accent-hover: #0d47a1; --line: #90caf9; }
+        body.theme-green { --accent: #2e7d32; --accent-hover: #1b5e20; --line: #a5d6a7; }
+        body.theme-lavender { --accent: #7b1fa2; --accent-hover: #4a148c; --line: #ce93d8; }
+        body.theme-mono { --accent: #424242; --accent-hover: #212121; --line: #bdbdbd; }
+        body.theme-pink { --accent: #c2185b; --accent-hover: #880e4f; --line: #f48fb1; }
+        body.theme-orange { --accent: #e65100; --accent-hover: #bf360c; --line: #ffb74d; }
         * { box-sizing: border-box; }
         html { -webkit-text-size-adjust: 100%; }
         body {
