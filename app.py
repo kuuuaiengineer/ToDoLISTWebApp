@@ -7,7 +7,14 @@ from authlib.integrations.flask_client import OAuth
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_login import LoginManager, login_user, logout_user, current_user
 
-from auth import User, init_db, login_required
+from auth import User, init_db, login_required, get_user_font, set_user_font
+from categories import (
+    init_categories_db,
+    get_categories,
+    get_category_names,
+    add_category,
+    delete_category,
+)
 from google_sheets import (
     get_sheet,
     get_all_todos,
@@ -22,6 +29,7 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-key-change-in-production")
 
 init_db()
+init_categories_db()
 
 # Google OAuth
 oauth = OAuth(app)
@@ -44,6 +52,14 @@ def load_user(user_id):
     return User.get(int(user_id))
 
 
+@app.context_processor
+def inject_font():
+    """全テンプレートにフォント設定を渡す"""
+    if current_user.is_authenticated:
+        return {"font_pref": get_user_font(current_user.id)}
+    return {"font_pref": "gothic"}
+
+
 def get_worksheet():
     """ワークシートを取得（エラーハンドリング付き）"""
     try:
@@ -51,10 +67,6 @@ def get_worksheet():
     except Exception as e:
         flash(f"Googleスプレッドシートの接続に失敗しました: {e}", "error")
         return None
-
-
-# カテゴリの選択肢
-CATEGORIES = ["", "仕事", "プライベート", "買い物", "その他"]
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -151,6 +163,40 @@ def register():
     return render_template("register.html")
 
 
+@app.route("/settings", methods=["GET", "POST"])
+@login_required
+def settings():
+    """設定（フォント・カテゴリ）"""
+    if request.method == "POST":
+        # フォント変更
+        if request.form.get("font"):
+            font = request.form.get("font", "gothic")
+            set_user_font(current_user.id, font)
+            flash("フォントを変更しました。", "success")
+            return redirect(url_for("settings"))
+        # カテゴリ追加
+        if "category_name" in request.form:
+            ok, err = add_category(current_user.id, request.form.get("category_name", ""))
+            if ok:
+                flash("カテゴリを追加しました。", "success")
+            else:
+                flash(err, "error")
+            return redirect(url_for("settings"))
+        # カテゴリ削除
+        if "delete_category_id" in request.form:
+            delete_category(current_user.id, request.form["delete_category_id"])
+            flash("カテゴリを削除しました。", "success")
+            return redirect(url_for("settings"))
+
+    categories_list = get_categories(current_user.id)
+    current_font = get_user_font(current_user.id)
+    return render_template(
+        "settings.html",
+        categories=categories_list,
+        font=current_font,
+    )
+
+
 @app.route("/logout")
 def logout():
     """ログアウト"""
@@ -164,23 +210,31 @@ def logout():
 def index():
     """一覧表示"""
     worksheet = get_worksheet()
+    categories = get_category_names(current_user.id)
     if worksheet is None:
-        return render_template("index.html", todos=[], categories=CATEGORIES)
+        return render_template("index.html", todos=[], categories=categories, font=get_user_font(current_user.id))
 
     category_filter = request.args.get("category", "")
     todos = get_all_todos(worksheet, user_id=current_user.id)
     if category_filter:
         todos = [t for t in todos if t["category"] == category_filter]
 
-    return render_template("index.html", todos=todos, categories=CATEGORIES, category_filter=category_filter)
+    return render_template(
+        "index.html",
+        todos=todos,
+        categories=categories,
+        category_filter=category_filter,
+        font=get_user_font(current_user.id),
+    )
 
 
 @app.route("/add", methods=["GET", "POST"])
 @login_required
 def add():
     """新規登録"""
+    categories = get_category_names(current_user.id)
     if request.method == "GET":
-        return render_template("form.html", todo=None, action="add", categories=CATEGORIES)
+        return render_template("form.html", todo=None, action="add", categories=categories, font=get_user_font(current_user.id))
 
     title = request.form.get("title", "").strip()
     content = request.form.get("content", "").strip()
@@ -193,7 +247,8 @@ def add():
             "form.html",
             todo={"title": title, "content": content, "due_date": due_date, "category": category},
             action="add",
-            categories=CATEGORIES,
+            categories=categories,
+            font=get_user_font(current_user.id),
         )
 
     worksheet = get_worksheet()
@@ -218,13 +273,14 @@ def edit(todo_id):
         flash("該当するTodoが見つかりません。", "error")
         return redirect(url_for("index"))
 
+    categories = get_category_names(current_user.id)
     if request.method == "GET":
         todos = get_all_todos(worksheet, user_id=current_user.id)
         todo = next((t for t in todos if t["id"] == todo_id), None)
         if todo is None:
             flash("該当するTodoが見つかりません。", "error")
             return redirect(url_for("index"))
-        return render_template("form.html", todo=todo, action="edit", categories=CATEGORIES)
+        return render_template("form.html", todo=todo, action="edit", categories=categories, font=get_user_font(current_user.id))
 
     title = request.form.get("title", "").strip()
     content = request.form.get("content", "").strip()
@@ -237,7 +293,8 @@ def edit(todo_id):
             "form.html",
             todo={"id": todo_id, "title": title, "content": content, "due_date": due_date, "category": category},
             action="edit",
-            categories=CATEGORIES,
+            categories=categories,
+            font=get_user_font(current_user.id),
         )
 
     update_todo(worksheet, row, title, content, due_date, category=category)

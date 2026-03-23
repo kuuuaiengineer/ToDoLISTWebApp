@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>設定</h2>
+
+<div class="settings-section paper-card">
+    <h3>フォント</h3>
+    <form method="post" action="{{ url_for('settings') }}" class="font-select-form">
+        <div class="font-options">
+            <label class="font-option {% if font == 'handwritten' %}selected{% endif %}">
+                <input type="radio" name="font" value="handwritten" {% if font == 'handwritten' %}checked{% endif %} onchange="this.form.submit()">
+                <span class="font-preview font-handwritten">手書き風</span>
+            </label>
+            <label class="font-option {% if font == 'mincho' %}selected{% endif %}">
+                <input type="radio" name="font" value="mincho" {% if font == 'mincho' %}checked{% endif %} onchange="this.form.submit()">
+                <span class="font-preview font-mincho">明朝体</span>
+            </label>
+            <label class="font-option {% if font == 'gothic' %}selected{% endif %}">
+                <input type="radio" name="font" value="gothic" {% if font == 'gothic' %}checked{% endif %} onchange="this.form.submit()">
+                <span class="font-preview font-gothic">ゴシック体</span>
+            </label>
+        </div>
+    </form>
+</div>
+
+<div class="settings-section paper-card">
+    <h3>カテゴリ管理</h3>
+    <form method="post" action="{{ url_for('settings') }}" class="category-add-form">
+        <div class="form-group">
+            <input type="text" name="category_name" placeholder="新しいカテゴリ名" maxlength="50">
+        </div>
+        <button type="submit" class="btn">カテゴリを追加</button>
+    </form>
+    {% if categories %}
+    <ul class="category-list">
+        {% for cat in categories %}
+        <li class="category-item">
+            <span>{{ cat.name }}</span>
+            <form method="post" action="{{ url_for('settings') }}" style="display:inline;" onsubmit="return confirm('「{{ cat.name }}」を削除しますか？');">
+                <input type="hidden" name="delete_category_id" value="{{ cat.id }}">
+                <button type="submit" class="btn btn-small btn-danger">削除</button>
+            </form>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p class="muted">カテゴリがありません。上から追加してください。</p>
+    {% endif %}
+</div>
+
+<p><a href="{{ url_for('index') }}" class="btn" style="background:#6c757d;">一覧に戻る</a></p>
+{% endblock %}

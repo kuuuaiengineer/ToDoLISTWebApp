@@ -4,95 +4,149 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Todoリスト{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&family=Noto+Sans+JP:wght@400;500;700&family=Shippori+Mincho:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --paper-bg: #f5f0e6;
+            --paper-card: #fefdf9;
+            --paper-shadow: rgba(139, 119, 101, 0.15);
+            --ink: #2c2419;
+            --ink-light: #5a5248;
+            --accent: #8b4513;
+            --accent-red: #c0392b;
+            --line: #d4cfc4;
+        }
         * { box-sizing: border-box; }
         html { -webkit-text-size-adjust: 100%; }
         body {
-            font-family: "Segoe UI", "Yu Gothic UI", sans-serif;
             max-width: 800px;
             margin: 0 auto;
-            padding: 20px;
-            background: #f5f5f5;
+            padding: 24px;
+            background: var(--paper-bg);
+            background-image: 
+                url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23e8e4dc' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
             font-size: 16px;
             word-wrap: break-word;
+            color: var(--ink);
+            min-height: 100vh;
         }
-        h1 { color: #333; font-size: 1.5rem; }
+        body.font-handwritten { font-family: "Caveat", "Hiragino Maru Gothic ProN", cursive; }
+        body.font-mincho { font-family: "Shippori Mincho", "Yu Mincho", "Hiragino Mincho ProN", serif; }
+        body.font-gothic { font-family: "Noto Sans JP", "Yu Gothic UI", "Segoe UI", sans-serif; }
+
+        h1 { font-size: 1.6rem; color: var(--ink); margin-bottom: 8px; }
+        h2 { font-size: 1.3rem; color: var(--ink); margin: 20px 0 12px; border-bottom: 1px solid var(--line); padding-bottom: 6px; }
+        h3 { font-size: 1.1rem; color: var(--ink-light); margin: 16px 0 8px; }
+
         .btn {
             display: inline-block;
             padding: 8px 16px;
-            background: #4a90d9;
+            background: var(--accent);
             color: white;
             text-decoration: none;
-            border-radius: 6px;
+            border-radius: 4px;
             border: none;
             cursor: pointer;
             font-size: 14px;
         }
-        .btn:hover { background: #357abd; }
-        .btn-danger { background: #d9534f; }
-        .btn-danger:hover { background: #c9302c; }
+        .btn:hover { opacity: 0.9; background: #6b3410; }
+        .btn-danger { background: var(--accent-red); }
+        .btn-danger:hover { background: #a93226; }
         .btn-small { padding: 4px 10px; font-size: 12px; }
-        .flash { padding: 10px; margin: 10px 0; border-radius: 6px; }
-        .flash-success { background: #d4edda; color: #155724; }
-        .flash-error { background: #f8d7da; color: #721c24; }
-        table, .todo-table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
-        th { background: #4a90d9; color: white; }
-        tr:hover { background: #f9f9f9; }
+
+        .flash { padding: 10px 14px; margin: 12px 0; border-radius: 4px; border-left: 4px solid; }
+        .flash-success { background: #e8f5e9; color: #2e7d32; border-color: #4caf50; }
+        .flash-error { background: #ffebee; color: #c62828; border-color: #f44336; }
+
+        .paper-card {
+            background: var(--paper-card);
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 2px;
+            box-shadow: 0 2px 8px var(--paper-shadow);
+            border: 1px solid var(--line);
+        }
+
+        table, .todo-table { width: 100%; border-collapse: collapse; background: var(--paper-card); border-radius: 2px; overflow: hidden; box-shadow: 0 2px 8px var(--paper-shadow); border: 1px solid var(--line); }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--line); }
+        th { background: var(--accent); color: white; font-weight: 600; }
+        tr:hover { background: rgba(139, 69, 19, 0.04); }
+        th, td { overflow-wrap: break-word; }
+
         .form-group { margin-bottom: 16px; }
-        .form-group label { display: block; margin-bottom: 4px; font-weight: bold; color: #555; }
-        .form-group input, .form-group textarea {
+        .form-group label { display: block; margin-bottom: 4px; font-weight: 600; color: var(--ink-light); }
+        .form-group input, .form-group textarea, .form-group select {
             width: 100%;
             padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 14px;
+            border: 1px solid var(--line);
+            border-radius: 4px;
+            font-size: 16px;
+            background: var(--paper-card);
         }
         .form-group textarea { min-height: 100px; resize: vertical; }
-        .form-group select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
         .actions { display: flex; gap: 8px; flex-wrap: wrap; }
-        .user-info { color: #666; margin-bottom: 8px; }
-        .todo-completed { text-decoration: line-through; color: #999; }
-        .filter-bar { margin-bottom: 16px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .user-info { color: var(--ink-light); margin-bottom: 12px; font-size: 0.9rem; }
+        .todo-completed { text-decoration: line-through; color: var(--ink-light); opacity: 0.7; }
+        .filter-bar { margin-bottom: 20px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
         .todo-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-        .todo-table { width: 100%; min-width: 600px; }
-        th, td { overflow-wrap: break-word; }
+        .todo-table { min-width: 600px; }
 
         /* スマホ: カード表示 */
         .todo-cards { display: none; }
         .todo-card {
-            background: white;
-            border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 10px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            background: var(--paper-card);
+            border-radius: 2px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 6px var(--paper-shadow);
+            border: 1px solid var(--line);
         }
-        .todo-card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+        .todo-card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
         .todo-card-toggle { flex-shrink: 0; }
-        .todo-card-title { font-weight: bold; font-size: 1rem; flex: 1; word-break: normal; }
-        .todo-card-content { color: #555; font-size: 0.9rem; margin-bottom: 8px; line-height: 1.4; }
-        .todo-card-meta { font-size: 0.85rem; color: #888; margin-bottom: 10px; }
+        .todo-card-title { font-weight: 600; font-size: 1rem; flex: 1; word-break: normal; }
+        .todo-card-content { color: var(--ink-light); font-size: 0.9rem; margin-bottom: 8px; line-height: 1.5; }
+        .todo-card-meta { font-size: 0.85rem; color: var(--ink-light); margin-bottom: 10px; }
         .todo-card-category::after { content: " · "; }
         .todo-card-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
+        /* 設定ページ */
+        .settings-section { margin-bottom: 24px; }
+        .font-options { display: flex; gap: 12px; flex-wrap: wrap; }
+        .font-option { cursor: pointer; padding: 8px 16px; border: 2px solid var(--line); border-radius: 4px; }
+        .font-option:hover, .font-option.selected { border-color: var(--accent); background: rgba(139, 69, 19, 0.05); }
+        .font-preview { font-size: 1.1rem; }
+        .font-handwritten { font-family: "Caveat", cursive; }
+        .font-mincho { font-family: "Shippori Mincho", serif; }
+        .font-gothic { font-family: "Noto Sans JP", sans-serif; }
+        .category-add-form { margin-bottom: 16px; display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; }
+        .category-add-form .form-group { margin-bottom: 0; flex: 1; min-width: 150px; }
+        .category-list { list-style: none; padding: 0; margin: 0; }
+        .category-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px dashed var(--line); }
+        .category-item:last-child { border-bottom: none; }
+        .muted { color: var(--ink-light); font-size: 0.9rem; }
+
         @media (max-width: 640px) {
             body { padding: 12px; font-size: 14px; }
-            h1 { font-size: 1.25rem; }
+            h1 { font-size: 1.35rem; }
             .btn { padding: 6px 12px; font-size: 13px; }
             .btn-small { padding: 4px 8px; font-size: 11px; }
             .form-group input, .form-group textarea, .form-group select { font-size: 16px; }
             .filter-bar { flex-direction: column; align-items: stretch; }
             .todo-table-wrap { display: none; }
             .todo-cards { display: block; }
+            .font-options { flex-direction: column; }
         }
     </style>
 </head>
-<body>
+<body class="font-{{ font_pref }}">
     <h1>Todoリスト</h1>
     {% if current_user.is_authenticated %}
     <p class="user-info">
         {{ current_user.username }} でログイン中
-        <a href="{{ url_for('logout') }}" class="btn btn-small" style="margin-left:8px;">ログアウト</a>
+        <a href="{{ url_for('settings') }}" class="btn btn-small" style="margin-right:8px;">設定</a>
+        <a href="{{ url_for('logout') }}" class="btn btn-small">ログアウト</a>
     </p>
     {% endif %}
     {% with messages = get_flashed_messages(with_categories=true) %}

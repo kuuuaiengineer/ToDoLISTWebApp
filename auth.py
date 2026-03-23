@@ -27,17 +27,39 @@ def init_db():
             password_hash TEXT,
             google_id TEXT UNIQUE,
             email TEXT,
+            font_preference TEXT DEFAULT 'gothic',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
     conn.commit()
     # 既存テーブルにカラム追加（マイグレーション）
-    for col in ["google_id", "email"]:
+    for col in ["google_id", "email", "font_preference"]:
         try:
             conn.execute(f"ALTER TABLE users ADD COLUMN {col} TEXT")
             conn.commit()
         except sqlite3.OperationalError:
             pass
+    conn.close()
+
+
+def get_user_font(user_id):
+    """ユーザーのフォント設定を取得"""
+    conn = get_db()
+    row = conn.execute(
+        "SELECT font_preference FROM users WHERE id = ?",
+        (user_id,),
+    ).fetchone()
+    conn.close()
+    return (row["font_preference"] or "gothic") if row else "gothic"
+
+
+def set_user_font(user_id, font):
+    """ユーザーのフォント設定を保存"""
+    if font not in ("handwritten", "mincho", "gothic"):
+        font = "gothic"
+    conn = get_db()
+    conn.execute("UPDATE users SET font_preference = ? WHERE id = ?", (font, user_id))
+    conn.commit()
     conn.close()
 
 
